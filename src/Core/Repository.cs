@@ -3,22 +3,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Core;
 
-public class Repository<TEntity>:IDisposable,IRepository<TEntity> where TEntity : class
+public class Repository<TEntity> : IDisposable, IRepository<TEntity> where TEntity : class
 {
-    private readonly DbContext _context;
+    protected readonly DbContext _context;
 
     public Repository(DbContext context)
     {
         _context = context;
     }
-    public void Add(TEntity entity)
+
+    public async Task Add(TEntity entity)
     {
-        _context.Set<TEntity>().Add(entity);
+        await _context.Set<TEntity>().AddAsync(entity);
     }
 
-    public void AddRange(IEnumerable<TEntity> entities)
+    public async Task AddRange(IEnumerable<TEntity> entities)
     {
-        _context.Set<TEntity>().AddRange(entities);
+        await _context.Set<TEntity>().AddRangeAsync(entities);
     }
 
     public void Remove(TEntity entity)
@@ -31,14 +32,16 @@ public class Repository<TEntity>:IDisposable,IRepository<TEntity> where TEntity 
         _context.Set<TEntity>().RemoveRange(entities);
     }
 
-    public TEntity? Find(int id)
+    public async Task<TEntity?> FindById(int id)
     {
-        return _context.Set<TEntity>().Find(id);
+        return await _context.Set<TEntity>().FindAsync(id);
     }
 
-    public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> predicate)
+    public async Task<IEnumerable<TEntity>> FindByPredicate(Expression<Func<TEntity, bool>>? predicate)
     {
-        return _context.Set<TEntity>().Where(predicate);
+        return predicate == null ? 
+            await _context.Set<TEntity>().ToListAsync() :
+            await _context.Set<TEntity>().Where(predicate).ToListAsync();
     }
 
     public void Dispose()
