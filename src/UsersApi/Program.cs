@@ -35,25 +35,31 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
-if (builder.Environment.IsDevelopment())
+
+
+builder.Services.AddDbContext<AppDbContext>(opt =>
 {
-    Console.WriteLine("--> Using InMemoryDB");
-    builder.Services.AddDbContext<AppDbContext>(opt =>opt.UseInMemoryDatabase("InMemoryUsers"));
-}
-else
-{
-    builder.Services.AddDbContext<AppDbContext>(opt =>
-    {
-        Console.WriteLine("--> Using SQL Server");
-        //it's recommended to use set the password in the environment variables
-        opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    });
-}
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 builder.Services.AddScoped<IUserRepository,UserRepository>();
 
 var app = builder.Build();
-
+// Auto-run migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        Console.WriteLine("--> Attempting to apply migrations...");
+        db.Database.Migrate();
+        Console.WriteLine("--> Migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"--> Migration failed: {ex.Message}");
+    }
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

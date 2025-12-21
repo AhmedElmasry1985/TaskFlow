@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # SQL Server for UsersAPI
+  usersdb:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Pass@word123
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - usersdb-data:/var/opt/mssql
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  # UsersAPI Service
+  usersapi:
+    build:
+      context: .
+      dockerfile: UsersApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Server=usersdb;Database=UsersDb;User Id=sa;Password=Pass@word123;TrustServerCertificate=True;
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5001:8080"
+      - "5002:8081"
+    depends_on:
+      - usersdb
+      - rabbitmq
+
+volumes:
+  usersdb-data:
+  rabbitmq-data:
