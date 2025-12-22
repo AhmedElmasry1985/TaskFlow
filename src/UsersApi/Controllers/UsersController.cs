@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,12 +7,13 @@ using UsersApi.Data;
 using UsersApi.DTOs;
 using UsersApi.Models;
 using UsersApi.Services.Auth;
+using UsersApi.Services.MessageBus;
 
 namespace UsersApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IUserRepository userRepository, Jwt jwt) : ControllerBase
+public class UsersController(IUserRepository userRepository, Jwt jwt, IMessageBusClient messageBusClient) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<ActionResult<RegisterResponseDto>> Register(RegisterRequestDto registerRequestDto)
@@ -48,6 +50,16 @@ public class UsersController(IUserRepository userRepository, Jwt jwt) : Controll
 
         responseDto.UserId = user.Id;
         responseDto.Result = new ValidationResult { IsSuccess = true, Message = "User registered successfully" };
+        var publishUserDto = new PublishUserDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Username = user.Username,
+            Role = user.Role,
+            Event = "UserRegistered",
+            DateTime = DateTime.UtcNow
+        };
+        await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishUserDto));
         return Ok(responseDto);
     }
 

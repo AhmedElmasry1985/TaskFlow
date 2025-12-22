@@ -11,7 +11,7 @@ using UsersApi.Data;
 namespace UsersApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251221094748_InitialCreate")]
+    [Migration("20251221122747_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -39,8 +39,8 @@ namespace UsersApi.Migrations
 
                     b.Property<string>("HashedPassword")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Role")
                         .IsRequired()

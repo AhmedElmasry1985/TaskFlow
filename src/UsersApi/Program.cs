@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using UsersApi.Data;
 using UsersApi.Services.Auth;
+using UsersApi.Services.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddScoped<Jwt>();
+builder.Services.AddSingleton<IMessageBusClient, RabbitMQClient>();
 builder.Services
     .AddAuthentication(opt =>
     {
