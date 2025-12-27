@@ -12,7 +12,7 @@ using TasksApi.Data;
 namespace TasksApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251227183816_InitialCreate")]
+    [Migration("20251227232837_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -48,6 +48,8 @@ namespace TasksApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatorUserId");
 
                     b.HasIndex("TaskId");
 
@@ -171,11 +173,19 @@ namespace TasksApi.Migrations
 
             modelBuilder.Entity("TasksApi.Models.Note", b =>
                 {
+                    b.HasOne("TasksApi.Models.User", "CreatorUser")
+                        .WithMany("CreatedNotes")
+                        .HasForeignKey("CreatorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TasksApi.Models.Task", "Task")
                         .WithMany("Notes")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatorUser");
 
                     b.Navigation("Task");
                 });
@@ -220,6 +230,8 @@ namespace TasksApi.Migrations
             modelBuilder.Entity("TasksApi.Models.User", b =>
                 {
                     b.Navigation("AssignedTasks");
+
+                    b.Navigation("CreatedNotes");
 
                     b.Navigation("CreatedTasks");
                 });

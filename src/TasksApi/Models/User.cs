@@ -12,4 +12,5 @@ public class User
     [Required]public int ExternalId { get; set; }
     public Collection<Task> CreatedTasks { get; set; } = [];
     public Collection<Task> AssignedTasks { get; set; } = [];
+    public Collection<Note> CreatedNotes { get; set; } = [];
 }

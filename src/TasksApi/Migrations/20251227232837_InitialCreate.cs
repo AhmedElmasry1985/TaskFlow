@@ -98,6 +98,12 @@ namespace TasksApi.Migrations
                         principalTable: "Tasks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Notes_Users_CreatorUserId",
+                        column: x => x.CreatorUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.InsertData(
@@ -111,6 +117,11 @@ namespace TasksApi.Migrations
                     { 4, "Completed" },
                     { 5, "Cancelled" }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notes_CreatorUserId",
+                table: "Notes",
+                column: "CreatorUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notes_TaskId",

@@ -46,6 +46,8 @@ namespace TasksApi.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatorUserId");
+
                     b.HasIndex("TaskId");
 
                     b.ToTable("Notes");
@@ -168,11 +170,19 @@ namespace TasksApi.Migrations
 
             modelBuilder.Entity("TasksApi.Models.Note", b =>
                 {
+                    b.HasOne("TasksApi.Models.User", "CreatorUser")
+                        .WithMany("CreatedNotes")
+                        .HasForeignKey("CreatorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TasksApi.Models.Task", "Task")
                         .WithMany("Notes")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatorUser");
 
                     b.Navigation("Task");
                 });
@@ -217,6 +227,8 @@ namespace TasksApi.Migrations
             modelBuilder.Entity("TasksApi.Models.User", b =>
                 {
                     b.Navigation("AssignedTasks");
+
+                    b.Navigation("CreatedNotes");
 
                     b.Navigation("CreatedTasks");
                 });

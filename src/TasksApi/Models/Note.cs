@@ -11,4 +11,5 @@ public class Note
     public Task Task { get; set; }
     [Required]public DateTime CreationDate { get; set; } = DateTime.UtcNow;
     [Required]public int CreatorUserId { get; set; }
+    public User CreatorUser { get; set; }
 }

@@ -46,6 +46,13 @@ public class AppDbContext:DbContext
             .WithOne(n=>n.Task)
             .HasForeignKey(n=>n.TaskId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        //Notes to Users
+        modelBuilder.Entity<Note>()
+            .HasOne(n=>n.CreatorUser)
+            .WithMany(u=>u.CreatedNotes)
+            .HasForeignKey(n=>n.CreatorUserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
     
 }
