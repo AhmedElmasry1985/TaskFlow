@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using UsersApi.Data;
+using UsersApi.Migrations;
 using UsersApi.Services.Auth;
 using UsersApi.Services.MessageBus;
 
@@ -47,21 +48,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped<IUserRepository,UserRepository>();
 
 var app = builder.Build();
-// Auto-run migrations on startup
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    try
-    {
-        Console.WriteLine("--> Attempting to apply migrations...");
-        db.Database.Migrate();
-        Console.WriteLine("--> Migrations applied successfully");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"--> Migration failed: {ex.Message}");
-    }
-}
+app.Migrate();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
