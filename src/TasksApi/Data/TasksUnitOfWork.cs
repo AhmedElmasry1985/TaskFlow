@@ -1,19 +1,19 @@
 ﻿namespace TasksApi.Data;
 
-public interface ICreateTasksUnitOfWork
+public interface ITasksUnitOfWork
 {
     ITaskRepository TaskRepository { get; }
     INoteRepository NoteRepository { get; }
     Task<bool> SaveChangesAsync();
 }
 
-public class CreateTasksUnitOfWork : ICreateTasksUnitOfWork
+public class TasksUnitOfWork : ITasksUnitOfWork
 {
     public ITaskRepository TaskRepository { get; }
     public INoteRepository NoteRepository { get; }
     private readonly AppDbContext _appDbContext;
 
-    public CreateTasksUnitOfWork(AppDbContext appDbContext, ITaskRepository taskRepository, INoteRepository noteRepository)
+    public TasksUnitOfWork(AppDbContext appDbContext, ITaskRepository taskRepository, INoteRepository noteRepository)
     {
         _appDbContext = appDbContext;
         TaskRepository = taskRepository;

@@ -1,9 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace TasksApi.Models;
 
+[Index(nameof(ExternalId),IsUnique = true)]
 public class User
 {
     [Key,DatabaseGenerated(DatabaseGeneratedOption.Identity)]public int Id { get; set; }

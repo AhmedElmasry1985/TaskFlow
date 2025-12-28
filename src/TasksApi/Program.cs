@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TasksApi.Data;
+using TasksApi.MappersProfile;
 using TasksApi.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,8 +10,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped<IUserRepository,UserRepository>();
 builder.Services.AddScoped<ITaskRepository,TaskRepository>();
 builder.Services.AddScoped<INoteRepository,NoteRepository>();
-builder.Services.AddScoped<ICreateTasksUnitOfWork,CreateTasksUnitOfWork>();
-
+builder.Services.AddScoped<ITasksUnitOfWork,TasksUnitOfWork>();
+builder.Services.AddAutoMapper(exp=>exp.AddProfile<AutoMapperProfile>());
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
