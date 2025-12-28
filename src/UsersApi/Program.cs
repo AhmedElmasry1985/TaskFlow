@@ -1,7 +1,5 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using UsersApi.Data;
 using UsersApi.Migrations;
 using UsersApi.Services.Auth;
@@ -15,32 +13,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddScoped<Jwt>();
 builder.Services.AddSingleton<IMessageBusClient, RabbitMQClient>();
-builder.Services
-    .AddAuthentication(opt =>
-    {
-        opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(opt =>
-    {
-        opt.RequireHttpsMetadata = false;
-        opt.SaveToken = false;
-        opt.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey =
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
-        };
-    });
-builder.Services.AddAuthorization();
-
-
+builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));

@@ -12,8 +12,8 @@ public class CreateNewTaskRequestDto
     [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
     public string Description { get; set; }
     
-    [Required(ErrorMessage = "CreatorUserId is required")]
-    public int CreatorUserId { get; set; }
+    // [Required(ErrorMessage = "CreatorUserId is required")]
+    // public int CreatorUserId { get; set; }
     
     [Required(ErrorMessage = "AssignedUserId is required")]
     public int AssignedUserId { get; set; }

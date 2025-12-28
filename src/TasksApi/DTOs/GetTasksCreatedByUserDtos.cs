@@ -4,7 +4,7 @@ namespace TasksApi.DTOs;
 
 public class GetTasksCreatedByUserRequestDto
 {
-    public int UserId { get; set; }
+    //public int UserId { get; set; }
 }
 
 public class GetTasksCreatedByUserResponseDto : ResponseDtoBase

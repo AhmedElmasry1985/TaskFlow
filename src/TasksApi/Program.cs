@@ -1,3 +1,4 @@
+using Core;
 using Microsoft.EntityFrameworkCore;
 using TasksApi.Data;
 using TasksApi.MappersProfile;
@@ -12,7 +13,7 @@ builder.Services.AddScoped<ITaskRepository,TaskRepository>();
 builder.Services.AddScoped<INoteRepository,NoteRepository>();
 builder.Services.AddScoped<ITasksUnitOfWork,TasksUnitOfWork>();
 builder.Services.AddAutoMapper(exp=>exp.AddProfile<AutoMapperProfile>());
-
+builder.Services.AddJwtAuthentication(builder.Configuration);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

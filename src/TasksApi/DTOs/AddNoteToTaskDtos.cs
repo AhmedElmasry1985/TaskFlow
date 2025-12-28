@@ -12,8 +12,8 @@ public class AddNoteToTaskRequestDto
     [Required(ErrorMessage = "TaskId is required")]
     public int TaskId { get; set; }
     
-    [Required(ErrorMessage = "CreatorUserId is required")]
-    public int CreatorUserId { get; set; }
+    // [Required(ErrorMessage = "CreatorUserId is required")]
+    // public int CreatorUserId { get; set; }
 }
 
 public class AddNoteToTaskResponseDto : ResponseDtoBase

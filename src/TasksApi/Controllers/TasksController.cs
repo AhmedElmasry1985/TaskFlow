@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using AutoMapper;
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TasksApi.Data;
 using TasksApi.DTOs;
@@ -9,40 +11,63 @@ namespace TasksApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TasksController(ITasksUnitOfWork tasksUnitOfWork,IUserRepository userRepository,IMapper mapper):ControllerBase
+[Authorize]
+public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository userRepository, IMapper mapper)
+    : ControllerBase
 {
-    [HttpGet("GetByCreatorUser")]
-    public async Task<ActionResult<GetTasksCreatedByUserResponseDto>> GetTasksCreatedByUser([FromBody] GetTasksCreatedByUserRequestDto requestDto)
+    
+    [HttpGet("GetMine")]
+    public async Task<ActionResult<GetTasksCreatedByUserResponseDto>> GetTasksCreatedByUser(
+        [FromBody] GetTasksCreatedByUserRequestDto requestDto)
     {
         var responseDto = new GetTasksCreatedByUserResponseDto();
-        var creatorUser = await userRepository.GetUserByExternalId(requestDto.UserId);
-        if(creatorUser == null)
+        var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var parseResult = int.TryParse(userIdFromClaim, out var userId);
+        User? creatorUser = null;
+        if(!parseResult)
             ModelState.AddModelError("UserId", "Creator user not found");
+        else
+        {
+            creatorUser = await userRepository.GetUserByExternalId(userId);
+            if (creatorUser == null)
+                ModelState.AddModelError("UserId", "Creator user not found");
+        }
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
             responseDto.Result = new ValidationResult { IsSuccess = false, Message = string.Join(", ", errors) };
             return BadRequest(responseDto);
         }
+
         var tasks = await tasksUnitOfWork.TaskRepository.GetTasksCreatedByUser(creatorUser.Id);
         responseDto.Tasks = mapper.Map<List<TaskDto>>(tasks);
         responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Tasks retrieved successfully" };
         return Ok(responseDto);
     }
 
-    [HttpGet("GetByAssignedUser")]
-    public async Task<ActionResult<GetTasksAssignedToUserResponseDto>> GetTasksAssignedToUser([FromBody] GetTasksAssignedToUserRequestDto requestDto)
+    [HttpGet("GetAssignedToMe")]
+    public async Task<ActionResult<GetTasksAssignedToUserResponseDto>> GetTasksAssignedToUser(
+        [FromBody] GetTasksAssignedToUserRequestDto requestDto)
     {
         var responseDto = new GetTasksAssignedToUserResponseDto();
-        var assignedUser = await userRepository.GetUserByExternalId(requestDto.UserId);
-        if(assignedUser == null)
+        var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var parseResult = int.TryParse(userIdFromClaim, out var userId);
+        User? assignedUser = null;
+        if(!parseResult)
             ModelState.AddModelError("UserId", "Assigned user not found");
+        else
+        {
+            assignedUser = await userRepository.GetUserByExternalId(userId);
+            if (assignedUser == null)
+                ModelState.AddModelError("UserId", "Assigned user not found");
+        }
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
             responseDto.Result = new ValidationResult { IsSuccess = false, Message = string.Join(", ", errors) };
             return BadRequest(responseDto);
         }
+
         var tasks = await tasksUnitOfWork.TaskRepository.GetTasksAssignedToUser(assignedUser.Id);
         responseDto.Tasks = mapper.Map<List<TaskDto>>(tasks);
         responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Tasks retrieved successfully" };
@@ -50,20 +75,29 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork,IUserRepository us
     }
 
     [HttpPost("CreateTask")]
-    public async Task<ActionResult<CreateNewTaskResponseDto>> CreateNewTask([FromBody] CreateNewTaskRequestDto requestDto)
+    public async Task<ActionResult<CreateNewTaskResponseDto>> CreateNewTask(
+        [FromBody] CreateNewTaskRequestDto requestDto)
     {
         var responseDto = new CreateNewTaskResponseDto();
-        var creatorUser = await userRepository.GetUserByExternalId(requestDto.CreatorUserId);
-        if(creatorUser == null)
+        var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var parseResult = int.TryParse(userIdFromClaim, out var userId);
+        User? creatorUser = null;
+        if(!parseResult)
             ModelState.AddModelError("CreatorUserId", "Creator user not found");
+        else
+        { creatorUser = await userRepository.GetUserByExternalId(userId);
+            if (creatorUser == null)
+                ModelState.AddModelError("CreatorUserId", "Creator user not found");
+        }
         User? assignedUser = creatorUser; // Default to creator
-        if (requestDto.CreatorUserId != requestDto.AssignedUserId) //prevents double check if the creator is the assigned user
+        if (creatorUser.Id !=
+            requestDto.AssignedUserId) //prevents double check if the creator is the assigned user
         {
-             assignedUser = await userRepository.GetUserByExternalId(requestDto.AssignedUserId);
-            if(assignedUser == null)
+            assignedUser = await userRepository.GetUserByExternalId(requestDto.AssignedUserId);
+            if (assignedUser == null)
                 ModelState.AddModelError("AssignedUserId", "Assigned user not found");
         }
-        
+
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -95,16 +129,25 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork,IUserRepository us
     }
 
     [HttpPost("AddNote")]
-    public async Task<ActionResult<AddNoteToTaskResponseDto>> AddNoteToTask([FromBody] AddNoteToTaskRequestDto requestDto)
+    public async Task<ActionResult<AddNoteToTaskResponseDto>> AddNoteToTask(
+        [FromBody] AddNoteToTaskRequestDto requestDto)
     {
         var responseDto = new AddNoteToTaskResponseDto();
-        
-        var task = await tasksUnitOfWork.TaskRepository.FindById(requestDto.TaskId);
-        if(task == null)
-            ModelState.AddModelError("TaskId", "Task not found");
-        var creatorUser = await userRepository.GetUserByExternalId(requestDto.CreatorUserId);
-        if(creatorUser == null)
+        var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var parseResult = int.TryParse(userIdFromClaim, out var userId);
+        User? creatorUser = null;
+        if(!parseResult)
             ModelState.AddModelError("CreatorUserId", "Creator user not found");
+        else
+        {
+            creatorUser = await userRepository.GetUserByExternalId(userId);
+            if (creatorUser == null)
+                ModelState.AddModelError("CreatorUserId", "Creator user not found");
+        }
+        var task = await tasksUnitOfWork.TaskRepository.FindById(requestDto.TaskId);
+        if (task == null)
+            ModelState.AddModelError("TaskId", "Task not found");
+        
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -133,14 +176,15 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork,IUserRepository us
     }
 
     [HttpPut("ChangeStatus")]
-    public async Task<ActionResult<ChangeTaskStatusResponseDto>> ChangeTaskStatus([FromBody] ChangeTaskStatusRequestDto requestDto)
+    public async Task<ActionResult<ChangeTaskStatusResponseDto>> ChangeTaskStatus(
+        [FromBody] ChangeTaskStatusRequestDto requestDto)
     {
         var responseDto = new ChangeTaskStatusResponseDto();
-        
+
         var task = await tasksUnitOfWork.TaskRepository.FindById(requestDto.TaskId);
-        if(task == null)
+        if (task == null)
             ModelState.AddModelError("TaskId", "Task not found");
-        
+
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
