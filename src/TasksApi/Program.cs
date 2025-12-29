@@ -3,9 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using TasksApi.Data;
 using TasksApi.MappersProfile;
 using TasksApi.Migrations;
+using TasksApi.Services.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
+builder.Services.AddSingleton<IEventProcessor,EventProcessor>();
+builder.Services.AddHostedService<RabbitMQSubscriber>();
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IUserRepository,UserRepository>();

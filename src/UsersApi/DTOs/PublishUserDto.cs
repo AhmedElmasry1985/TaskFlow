@@ -7,6 +7,6 @@ public class PublishUserDto
     public string Role { get; set; } 
     public string Username { get; set; }
     // Create, Update, Delete
-    public string Event { get; set; }
+    public string EventName { get; set; }
     public DateTime DateTime { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Core;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RabbitMQ.Client;
 
@@ -6,7 +7,6 @@ namespace UsersApi.Services.MessageBus;
 
 public class RabbitMQClient : IAsyncDisposable, IMessageBusClient
 {
-    private static readonly string ExchangeName = "taskflow";
     private readonly IConfiguration _configuration;
     private bool _isInitialized = false;
     IConnection _connection;
@@ -35,7 +35,7 @@ public class RabbitMQClient : IAsyncDisposable, IMessageBusClient
 
             _connection = await factory.CreateConnectionAsync();
             _channel = await _connection.CreateChannelAsync();
-            await _channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Fanout);
+            await _channel.ExchangeDeclareAsync(Strings.ExchangeName, ExchangeType.Fanout);
             _isInitialized = true;
             Console.WriteLine("--> RabbitMQ connected successfully");
         }
@@ -55,7 +55,7 @@ public class RabbitMQClient : IAsyncDisposable, IMessageBusClient
         if (_connection.IsOpen && _channel.IsOpen)
         {
             await _channel.BasicPublishAsync(
-                exchange: ExchangeName,
+                exchange: Strings.ExchangeName,
                 routingKey: string.Empty,
                 mandatory: false,
                 body: Encoding.UTF8.GetBytes(message));

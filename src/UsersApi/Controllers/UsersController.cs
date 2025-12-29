@@ -56,7 +56,7 @@ public class UsersController(IUserRepository userRepository, Jwt jwt, IMessageBu
             FullName = user.FullName,
             Username = user.Username,
             Role = user.Role,
-            Event = "UserRegistered",
+            EventName = Strings.UserRegisteredEvent,
             DateTime = DateTime.UtcNow
         };
         await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishUserDto));
