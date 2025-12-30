@@ -17,7 +17,6 @@ public class EventProcessor(IMapper mapper, IServiceScopeFactory serviceScopeFac
         {
             case Strings.UserRegisteredEvent:
                 return await AddUser(message);
-                break;
         }
         return true;
     }

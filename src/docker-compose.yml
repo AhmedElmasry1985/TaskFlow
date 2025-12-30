@@ -1,4 +1,16 @@
 services:
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+        
   # SQL Server for UsersAPI
   usersdb:
     image: mcr.microsoft.com/mssql/server:2017-latest
@@ -17,18 +29,6 @@ services:
       retries: 10
       start_period: 30s
 
-  # RabbitMQ Message Broker
-  rabbitmq:
-    image: rabbitmq:3-management
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-
   # UsersAPI Service
   usersapi:
     build:
@@ -42,14 +42,68 @@ services:
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
     ports:
-      - "5001:8080"
-      - "5002:8081"
+      - "18080:8080"
+      - "18081:8081"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
     depends_on:
       usersdb:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+        
+  # SQL Server for TasksAPI
+  tasksdb:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Pass@word123
+      - MSSQL_PID=Express
+    ports:
+      - "21433:1433"
+    volumes:
+      - tasksdb-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Pass@word123", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  # TasksAPI Service
+  tasksapi:
+    build:
+      context: .
+      dockerfile: TasksApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Server=tasksdb;Database=TasksDb;User Id=sa;Password=Pass@word123;TrustServerCertificate=True;
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "28080:8080"
+      - "28081:8081"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      tasksdb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      usersapi:
+        condition: service_healthy # Waits for UsersAPI for gRPC
 
 volumes:
-  usersdb-data:
   rabbitmq-data:
+  usersdb-data:
+  tasksdb-data:

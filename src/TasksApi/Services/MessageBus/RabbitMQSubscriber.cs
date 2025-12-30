@@ -7,7 +7,6 @@ namespace TasksApi.Services.MessageBus;
 
 public class RabbitMQSubscriber(IConfiguration configuration, IEventProcessor eventProcessor) : BackgroundService
 {
-    private readonly IEventProcessor _eventProcessor;
     private bool _isInitialized = false;
     IConnection _connection;
     IChannel _channel;
@@ -61,7 +60,7 @@ public class RabbitMQSubscriber(IConfiguration configuration, IEventProcessor ev
         {
             var body = e.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            await _eventProcessor.ProcessEvent(message);
+            await eventProcessor.ProcessEvent(message);
             //todo: Manual Acknowledgment for Reliability:
             //put ProcessEvent in try catch block
             //if success, call _channel.BasicAckAsync, else call _channel.BasicNackAsync

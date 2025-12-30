@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using TasksApi.Data;
 using TasksApi.DTOs;
 using TasksApi.Models;
+using TaskStatus = TasksApi.Models.TaskStatus;
 
 namespace TasksApi.Controllers;
 
@@ -15,7 +16,20 @@ namespace TasksApi.Controllers;
 public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository userRepository, IMapper mapper)
     : ControllerBase
 {
+    //TODO: move to config or rule engine
+    static readonly int[] ValidStatusIdsForAddNote = [(int)TaskStatus.Created, (int)TaskStatus.InProgress];
+    static readonly string ValidStatusIdsForAddNoteString = string.Join(", ", ValidStatusIdsForAddNote.Select(s => ((TaskStatus)s).ToString()));
+    private static readonly Dictionary<int, int[]> ValidStatusIdsForChangeStatus = new()
+    {
+        { (int)TaskStatus.Created, [(int)TaskStatus.Cancelled, (int)TaskStatus.InProgress] },
+        { (int)TaskStatus.InProgress, [(int)TaskStatus.Completed, (int)TaskStatus.Cancelled] },
+    };
+    static readonly string ValidStatusIdsForChangeStatusString =
+        ValidStatusIdsForChangeStatus.Select(element=>$"{((TaskStatus)element.Key).ToString()} -> {string.Join(", ", element.Value.Select(s => ((TaskStatus)s).ToString()))}")
+            .Aggregate((a, b) => a + ", " + b);
     
+    
+
     [HttpGet("GetMine")]
     public async Task<ActionResult<GetTasksCreatedByUserResponseDto>> GetTasksCreatedByUser(
         [FromBody] GetTasksCreatedByUserRequestDto requestDto)
@@ -24,7 +38,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var parseResult = int.TryParse(userIdFromClaim, out var userId);
         User? creatorUser = null;
-        if(!parseResult)
+        if (!parseResult)
             ModelState.AddModelError("UserId", "Creator user not found");
         else
         {
@@ -32,6 +46,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
             if (creatorUser == null)
                 ModelState.AddModelError("UserId", "Creator user not found");
         }
+
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -53,7 +68,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var parseResult = int.TryParse(userIdFromClaim, out var userId);
         User? assignedUser = null;
-        if(!parseResult)
+        if (!parseResult)
             ModelState.AddModelError("UserId", "Assigned user not found");
         else
         {
@@ -61,6 +76,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
             if (assignedUser == null)
                 ModelState.AddModelError("UserId", "Assigned user not found");
         }
+
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -82,13 +98,15 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var parseResult = int.TryParse(userIdFromClaim, out var userId);
         User? creatorUser = null;
-        if(!parseResult)
+        if (!parseResult)
             ModelState.AddModelError("CreatorUserId", "Creator user not found");
         else
-        { creatorUser = await userRepository.GetUserByExternalId(userId);
+        {
+            creatorUser = await userRepository.GetUserByExternalId(userId);
             if (creatorUser == null)
                 ModelState.AddModelError("CreatorUserId", "Creator user not found");
         }
+
         User? assignedUser = creatorUser; // Default to creator
         if (creatorUser.Id !=
             requestDto.AssignedUserId) //prevents double check if the creator is the assigned user
@@ -136,7 +154,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var userIdFromClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var parseResult = int.TryParse(userIdFromClaim, out var userId);
         User? creatorUser = null;
-        if(!parseResult)
+        if (!parseResult)
             ModelState.AddModelError("CreatorUserId", "Creator user not found");
         else
         {
@@ -144,10 +162,12 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
             if (creatorUser == null)
                 ModelState.AddModelError("CreatorUserId", "Creator user not found");
         }
+
         var task = await tasksUnitOfWork.TaskRepository.FindById(requestDto.TaskId);
         if (task == null)
             ModelState.AddModelError("TaskId", "Task not found");
-        
+        else if (!ValidStatusIdsForAddNote.Contains(task.StatusId))
+            ModelState.AddModelError("TaskId", $"Task status is not valid for adding note, only [{ValidStatusIdsForAddNoteString}] are allowed");
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
@@ -155,7 +175,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
             return BadRequest(responseDto);
         }
 
-        var newNote = new Models.Note
+        var newNote = new Note
         {
             Content = requestDto.Content,
             TaskId = requestDto.TaskId,
@@ -184,7 +204,8 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var task = await tasksUnitOfWork.TaskRepository.FindById(requestDto.TaskId);
         if (task == null)
             ModelState.AddModelError("TaskId", "Task not found");
-
+        else if (!ValidStatusIdsForChangeStatus.ContainsKey(task.StatusId) || !ValidStatusIdsForChangeStatus[task.StatusId].Contains(requestDto.NewStatusId))
+            ModelState.AddModelError("TaskId", $"Task status is not valid for changing status, only the following from:to are allowed [{ValidStatusIdsForChangeStatusString}]");
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();

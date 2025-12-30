@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
 
 namespace TasksApi.Models;
 
@@ -15,9 +16,14 @@ public class TaskStatusLT
 
 public enum TaskStatus
 {
+    [EnumMember(Value = "None")]
     None = 1,
+    [EnumMember(Value = "Created")]
     Created = 2,
+    [EnumMember(Value = "In Progress")]
     InProgress=3,
+    [EnumMember(Value = "Completed")]
     Completed=4,
+    [EnumMember(Value = "Cancelled")]
     Cancelled=5
 }
