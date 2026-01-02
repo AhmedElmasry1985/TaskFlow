@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using UsersApi.Data;
 using UsersApi.Migrations;
 using UsersApi.Services.Auth;
+using UsersApi.Services.GrpcServer;
 using UsersApi.Services.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddScoped<Jwt>();
+builder.Services.AddGrpc();
 builder.Services.AddSingleton<IMessageBusClient, RabbitMQClient>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddDbContext<AppDbContext>(opt =>
@@ -24,14 +26,15 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 var app = builder.Build();
 app.Migrate();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
-
+app.MapGrpcService<UsersService>();
+app.MapGet("/protos/users.proto", () => File.ReadAllText("Protos/Users.proto"));
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

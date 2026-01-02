@@ -59,7 +59,14 @@ public class UsersController(IUserRepository userRepository, Jwt jwt, IMessageBu
             EventName = Strings.UserRegisteredEvent,
             DateTime = DateTime.UtcNow
         };
-        await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishUserDto));
+        try
+        {
+            await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishUserDto));
+        }
+        catch (Exception e)
+        {
+            responseDto.Result = new ValidationResult { IsSuccess = true, Message = "User registered successfully, but failed to publish to message bus" };
+        }
         return Ok(responseDto);
     }
 

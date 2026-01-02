@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using TasksApi.Data;
 using TasksApi.MappersProfile;
 using TasksApi.Migrations;
+using TasksApi.Services.DataPopulators;
+using TasksApi.Services.GrpcClient;
 using TasksApi.Services.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,7 @@ builder.Services.AddScoped<IUserRepository,UserRepository>();
 builder.Services.AddScoped<ITaskRepository,TaskRepository>();
 builder.Services.AddScoped<INoteRepository,NoteRepository>();
 builder.Services.AddScoped<ITasksUnitOfWork,TasksUnitOfWork>();
+builder.Services.AddScoped<IUsersClient,UsersClient>();
 builder.Services.AddAutoMapper(exp=>exp.AddProfile<AutoMapperProfile>());
 builder.Services.AddJwtAuthentication(builder.Configuration);
 // Add services to the container.
@@ -29,8 +32,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+await app.PopulateUsers();
 app.Run();

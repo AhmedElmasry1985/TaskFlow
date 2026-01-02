@@ -36,7 +36,6 @@ services:
       dockerfile: UsersApi/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__DefaultConnection=Server=usersdb;Database=UsersDb;User Id=sa;Password=Pass@word123;TrustServerCertificate=True;
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=guest
@@ -44,6 +43,7 @@ services:
     ports:
       - "18080:8080"
       - "18081:8081"
+      - "18082:8082"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
@@ -81,11 +81,11 @@ services:
       dockerfile: TasksApi/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__DefaultConnection=Server=tasksdb;Database=TasksDb;User Id=sa;Password=Pass@word123;TrustServerCertificate=True;
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
+      - UsersServiceGrpcUrl=http://usersapi:8082
     ports:
       - "28080:8080"
       - "28081:8081"

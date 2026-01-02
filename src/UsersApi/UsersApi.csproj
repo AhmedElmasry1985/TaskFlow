@@ -32,5 +32,8 @@
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
+    <ItemGroup>
+        <Protobuf Include="Protos\Users.proto" GrpcServices="Server" />
+    </ItemGroup>
 
 </Project>

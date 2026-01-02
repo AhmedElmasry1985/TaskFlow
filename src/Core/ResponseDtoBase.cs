@@ -2,7 +2,7 @@
 
 public class ResponseDtoBase
 {
-    public ValidationResult Result { get; set; }
+    public ValidationResult Result { get; set; } = new();
 }
 
 public class ValidationResult
