@@ -1,4 +1,4 @@
-﻿namespace UsersApi.Services.MessageBus;
+﻿namespace Core.MessageClient;
 
 public interface IMessageBusClient
 {

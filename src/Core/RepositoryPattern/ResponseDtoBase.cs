@@ -1,4 +1,4 @@
-﻿namespace Core;
+﻿namespace Core.RepositoryPattern;
 
 public class ResponseDtoBase
 {

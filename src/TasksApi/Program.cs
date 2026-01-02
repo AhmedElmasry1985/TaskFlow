@@ -1,4 +1,6 @@
 using Core;
+using Core.JwtAuth;
+using Core.MessageClient;
 using Microsoft.EntityFrameworkCore;
 using TasksApi.Data;
 using TasksApi.MappersProfile;
@@ -11,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSingleton<IEventProcessor,EventProcessor>();
 builder.Services.AddHostedService<RabbitMQSubscriber>();
+builder.Services.AddSingleton<IMessageBusClient, RabbitMQClient>();
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IUserRepository,UserRepository>();

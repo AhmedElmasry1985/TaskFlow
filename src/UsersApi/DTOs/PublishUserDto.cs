@@ -1,12 +1,11 @@
-﻿namespace UsersApi.DTOs;
+﻿using Core.MessageClient;
 
-public class PublishUserDto
+namespace UsersApi.DTOs;
+
+public class PublishUserDto:BasePublishDto
 {
     public int Id { get; set; }
     public string FullName { get; set; }
     public string Role { get; set; } 
     public string Username { get; set; }
-    // Create, Update, Delete
-    public string EventName { get; set; }
-    public DateTime DateTime { get; set; }
 }

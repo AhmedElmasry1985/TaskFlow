@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Core;
+namespace Core.RepositoryPattern;
 
 public class Repository<TEntity> : IDisposable, IRepository<TEntity> where TEntity : class
 {

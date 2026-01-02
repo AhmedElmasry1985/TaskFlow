@@ -1,4 +1,5 @@
 ﻿using Core;
+using Core.RepositoryPattern;
 using Microsoft.EntityFrameworkCore;
 using TasksApi.Models;
 

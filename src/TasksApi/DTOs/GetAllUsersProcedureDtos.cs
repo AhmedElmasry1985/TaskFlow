@@ -1,4 +1,5 @@
 ﻿using Core;
+using Core.RepositoryPattern;
 
 namespace TasksApi.DTOs;
 

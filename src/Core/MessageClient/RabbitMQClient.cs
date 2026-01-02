@@ -1,22 +1,14 @@
 ﻿using System.Text;
-using Core;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 
-namespace UsersApi.Services.MessageBus;
-
-public class RabbitMQClient : IAsyncDisposable, IMessageBusClient
+namespace Core.MessageClient;
+public class RabbitMQClient(IConfiguration configuration) : IAsyncDisposable, IMessageBusClient
 {
-    private readonly IConfiguration _configuration;
-    private bool _isInitialized = false;
-    IConnection _connection;
-    IChannel _channel;
-    private SemaphoreSlim _semaphore = new(1, 1);
-
-    public RabbitMQClient(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
+    private bool _isInitialized;
+    private IConnection _connection;
+    private IChannel _channel;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private async Task Initialize()
     {
@@ -25,7 +17,7 @@ public class RabbitMQClient : IAsyncDisposable, IMessageBusClient
         try
         {
             if (_isInitialized) return;
-            var rabbitMQSettings = _configuration.GetSection("RabbitMQ");
+            var rabbitMQSettings = configuration.GetSection("RabbitMQ");
             var factory = new ConnectionFactory
             {
                 HostName = rabbitMQSettings.GetSection("Host").Value,

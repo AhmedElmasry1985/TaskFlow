@@ -1,4 +1,5 @@
 ﻿using Core;
+using Core.RepositoryPattern;
 using UsersApi.Models;
 
 namespace UsersApi.Data;

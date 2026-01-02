@@ -1,10 +1,10 @@
-using Core;
+using Core.JwtAuth;
+using Core.MessageClient;
 using Microsoft.EntityFrameworkCore;
 using UsersApi.Data;
 using UsersApi.Migrations;
 using UsersApi.Services.Auth;
 using UsersApi.Services.GrpcServer;
-using UsersApi.Services.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,13 +1,14 @@
 using System.Security.Claims;
 using System.Text.Json;
 using Core;
+using Core.MessageClient;
+using Core.RepositoryPattern;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UsersApi.Data;
 using UsersApi.DTOs;
 using UsersApi.Models;
 using UsersApi.Services.Auth;
-using UsersApi.Services.MessageBus;
 
 namespace UsersApi.Controllers;
 
@@ -63,7 +64,7 @@ public class UsersController(IUserRepository userRepository, Jwt jwt, IMessageBu
         {
             await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishUserDto));
         }
-        catch (Exception e)
+        catch
         {
             responseDto.Result = new ValidationResult { IsSuccess = true, Message = "User registered successfully, but failed to publish to message bus" };
         }

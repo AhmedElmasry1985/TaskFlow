@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Core;
+namespace Core.JwtAuth;
 
 public static class JwtAuthExtensions
 {

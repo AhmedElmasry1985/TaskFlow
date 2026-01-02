@@ -1,6 +1,9 @@
 using System.Security.Claims;
+using System.Text.Json;
 using AutoMapper;
 using Core;
+using Core.MessageClient;
+using Core.RepositoryPattern;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TasksApi.Data;
@@ -13,7 +16,7 @@ namespace TasksApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository userRepository, IMapper mapper)
+public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository userRepository, IMapper mapper, IMessageBusClient messageBusClient)
     : ControllerBase
 {
     //TODO: move to config or rule engine
@@ -142,7 +145,24 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var task = createdTask.FirstOrDefault(t => t.Id == newTask.Id);
 
         responseDto.Task = mapper.Map<TaskDto>(task);
-        responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Task created successfully" };
+        try
+        {
+            var publishTaskDto = new PublishTaskDto
+            {
+                Title = task.Title,
+                CreatorUsername = creatorUser.Username,
+                AssignedUsername = assignedUser.Username,
+                CreationDate = task.CreationDate,
+                EventName = Strings.TaskCreatedEvent,
+                DateTime = DateTime.UtcNow
+            };
+            await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishTaskDto));
+            responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Task created successfully" };
+        }
+        catch
+        {
+            responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Task created successfully, but failed to publish to message bus" };
+        }
         return Ok(responseDto);
     }
 
@@ -191,7 +211,25 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var note = createdNotes.FirstOrDefault(n => n.Id == newNote.Id);
 
         responseDto.Note = mapper.Map<NoteDto>(note);
-        responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Note added successfully" };
+        try
+        {
+            var publishNoteDto = new PublishNoteDto
+            {
+                TaskTitle = task.Title,
+                CreatorUsername = creatorUser.Username,
+                Content = note.Content,
+                CreationDate = note.CreationDate,
+                EventName = Strings.NoteAddedEvent,
+                DateTime = DateTime.UtcNow
+            };
+            await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishNoteDto));
+            responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Note added successfully" };
+        }
+        catch
+        {
+            responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Note added successfully, but failed to publish to message bus" };
+        }
+        
         return Ok(responseDto);
     }
 
@@ -200,7 +238,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         [FromBody] ChangeTaskStatusRequestDto requestDto)
     {
         var responseDto = new ChangeTaskStatusResponseDto();
-
+        var oldStatus = -1;
         var task = await tasksUnitOfWork.TaskRepository.FindById(requestDto.TaskId);
         if (task == null)
             ModelState.AddModelError("TaskId", "Task not found");
@@ -212,7 +250,7 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
             responseDto.Result = new ValidationResult { IsSuccess = false, Message = string.Join(", ", errors) };
             return BadRequest(responseDto);
         }
-
+        oldStatus = task.StatusId;
         task.StatusId = requestDto.NewStatusId;
         task.ModificationDate = DateTime.UtcNow;
 
@@ -223,7 +261,24 @@ public class TasksController(ITasksUnitOfWork tasksUnitOfWork, IUserRepository u
         var updatedTask = updatedTasks.FirstOrDefault(t => t.Id == task.Id);
 
         responseDto.Task = mapper.Map<TaskDto>(updatedTask);
-        responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Task status changed successfully" };
+        try
+        {
+            var publishTaskStatusDto = new PublishTaskStatusDto
+            {
+                Title = task.Title,
+                OldStatus = ((TaskStatus)oldStatus).ToString(),
+                NewStatus = ((TaskStatus)task.StatusId).ToString(),
+                EventName = Strings.TaskStatusChangedEvent,
+                DateTime = DateTime.UtcNow
+            };
+            await messageBusClient.PublishMessage(JsonSerializer.Serialize(publishTaskStatusDto));
+            responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Task status changed successfully" };
+        }
+        catch
+        {
+            responseDto.Result = new ValidationResult { IsSuccess = true, Message = "Task status changed successfully, but failed to publish to message bus" };
+        }
+        
         return Ok(responseDto);
     }
 }
