@@ -24,6 +24,7 @@ public class TaskRepository:Repository<Task>,ITaskRepository
     {
         return await AppDbContext.Tasks.Where(t => t.CreatorUserId == userId)
             .Include(t => t.Notes)
+            .ThenInclude(n=>n.CreatorUser)
             .Include(t => t.Status)
             .Include(t => t.CreatorUser)
             .Include(t => t.AssignedUser)
@@ -34,6 +35,7 @@ public class TaskRepository:Repository<Task>,ITaskRepository
     {
         return await AppDbContext.Tasks.Where(t => t.AssignedUserId == userId)
             .Include(t => t.Notes)
+            .ThenInclude(n=>n.CreatorUser)
             .Include(t => t.Status)
             .Include(t => t.CreatorUser)
             .Include(t => t.AssignedUser)
@@ -44,6 +46,7 @@ public class TaskRepository:Repository<Task>,ITaskRepository
     {
         return await AppDbContext.Tasks.Where(t => t.StatusId == statusId)
             .Include(t => t.Notes)
+            .ThenInclude(n=>n.CreatorUser)
             .Include(t => t.Status)
             .Include(t => t.CreatorUser)
             .Include(t => t.AssignedUser)

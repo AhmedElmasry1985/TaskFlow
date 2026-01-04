@@ -1,10 +1,12 @@
 ﻿using System.Text;
 using Core;
 using Core.Helpers;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace TasksApi.Services.MessageBus;
+namespace NotificationService.Services.MessageBus;
 
 public class RabbitMQSubscriber : BackgroundService
 {
@@ -85,7 +87,7 @@ public class RabbitMQSubscriber : BackgroundService
         };
         
         await _channel.BasicConsumeAsync(_queueName, true, consumer, cancellationToken: stoppingToken);
-        Console.WriteLine("--> TasksApi: Listening for events...");
+        Console.WriteLine("--> NotificationService: Listening for events...");
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)

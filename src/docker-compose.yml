@@ -10,6 +10,12 @@ services:
       - "15672:15672" # Management UI
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
         
   # SQL Server for UsersAPI
   usersdb:
@@ -54,8 +60,8 @@ services:
       usersdb:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
-        
+        condition: service_healthy
+  
   # SQL Server for TasksAPI
   tasksdb:
     image: mcr.microsoft.com/mssql/server:2017-latest
@@ -99,10 +105,20 @@ services:
       tasksdb:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
       usersapi:
         condition: service_healthy # Waits for UsersAPI for gRPC
-
+  notificationsrv:
+    build:
+      context: .
+      dockerfile: NotificationService/Dockerfile
+    environment:
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 volumes:
   rabbitmq-data:
   usersdb-data:

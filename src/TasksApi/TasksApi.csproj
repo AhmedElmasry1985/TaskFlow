@@ -26,6 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Core.JwtAuth\Core.JwtAuth.csproj" />
       <ProjectReference Include="..\Core\Core.csproj" />
     </ItemGroup>
 
