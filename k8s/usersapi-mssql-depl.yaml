@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usersapi-mssql-depl
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: usersapi-mssql
+  template:
+    metadata:
+      labels:
+        app: usersapi-mssql
+    spec:
+      containers:
+        - name: usersapi-mssql
+          image: mcr.microsoft.com/mssql/server:2017-latest
+          ports:
+            - containerPort: 1433
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              value: "Pass@word123"
+            - name: MSSQL_PID
+              value: "Developer"
+          volumeMounts:
+            - name: usersapi-mssql-data
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: usersapi-mssql-data
+          persistentVolumeClaim:
+            claimName: usersapi-mssql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usersapi-mssql-clusterip-srv
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  type: ClusterIP
+  selector:
+    app: usersapi-mssql
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: usersapi-mssql-pvc
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 250Mi

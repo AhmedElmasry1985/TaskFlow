@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasksapi-mssql-depl
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tasksapi-mssql
+  template:
+    metadata:
+      labels:
+        app: tasksapi-mssql
+    spec:
+      containers:
+        - name: tasksapi-mssql
+          image: mcr.microsoft.com/mssql/server:2017-latest
+          ports:
+            - containerPort: 1433
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              value: "Pass@word123"
+            - name: MSSQL_PID
+              value: "Developer"
+          volumeMounts:
+            - name: tasksapi-mssql-data
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: tasksapi-mssql-data
+          persistentVolumeClaim:
+            claimName: tasksapi-mssql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tasksapi-mssql-clusterip-srv
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  type: ClusterIP
+  selector:
+    app: tasksapi-mssql
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tasksapi-mssql-pvc
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  accessModes: 
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 250Mi

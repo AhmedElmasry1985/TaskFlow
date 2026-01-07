@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasksapi-depl
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tasksapi
+  template:
+    metadata:
+      labels:
+        app: tasksapi
+    spec:
+      containers:
+        - name: tasksapi
+          image: ahmedelmasry1985/tasksapi:latest
+          ports:
+            - name: http 
+              containerPort: 8080
+            - name: https 
+              containerPort: 8081
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ConnectionStrings__DefaultConnection
+              value: "Server=tasksapi-mssql-clusterip-srv,1433;Database=TasksDb;User Id=sa;Password=Pass@word123;MultipleActiveResultSets=true;TrustServerCertificate=true"
+            - name: RabbitMQ__Host
+              value: "rabbitmq-clusterip-srv"
+            - name: RabbitMQ__Username
+              value: "guest"
+            - name: RabbitMQ__Password
+              value: "guest"
+            - name: JwtSettings__SecretKey
+              value: "strong secret key for jwt encryption"
+            - name: JwtSettings__Issuer
+              value: "TaskFlow"
+            - name: JwtSettings__Audience
+              value: "TaskFlowUser"
+            - name: JwtSettings__ExpiryMinutes
+              value: "30"
+            - name: UsersServiceGrpcUrl
+              value: "usersapi-clusterip-svc:8082"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "256m"
+            limits:
+              memory: "128Mi"
+              cpu: "512m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tasksapi-clusterip-svc
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  type: ClusterIP
+  selector:
+    app: tasksapi
+  ports:
+    - name: tasksapihttp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: tasksapihttps
+      protocol: TCP
+      port: 8081
+      targetPort: 8081

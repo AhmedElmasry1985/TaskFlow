@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usersapi-depl
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: usersapi
+  template:
+    metadata:
+      labels:
+        app: usersapi
+    spec:
+      containers:
+        - name: usersapi
+          image: ahmedelmasry1985/usersapi:latest
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: https
+              containerPort: 8081
+            - name: grpc
+              containerPort: 8082
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ConnectionStrings__DefaultConnection
+              value: "Server=usersapi-mssql-clusterip-srv,1433;Database=UsersDb;User Id=sa;Password=Pass@word123;TrustServerCertificate=True;"
+            - name: RabbitMQ__Host
+              value: "rabbitmq-clusterip-srv"
+            - name: RabbitMQ__Username
+              value: "guest"
+            - name: RabbitMQ__Password
+              value: "guest"
+            - name: JwtSettings__SecretKey
+              value: "strong secret key for jwt encryption"
+            - name: JwtSettings__Issuer
+              value: "TaskFlow"
+            - name: JwtSettings__Audience
+              value: "TaskFlowUser"
+            - name: JwtSettings__ExpiryMinutes
+              value: "30"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "256m"
+            limits:
+              memory: "128Mi"
+              cpu: "512m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usersapi-clusterip-svc
+  namespace: taskflow
+  labels:
+    environment: production
+spec:
+  type: ClusterIP
+  selector:
+    app: usersapi
+  ports:
+    - name: usersapihttp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: usersapihttps
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+    - name: usersapigrpc
+      protocol: TCP
+      port: 8082
+      targetPort: 8082
+      

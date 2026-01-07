@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-depl
+  namespace: taskflow
+  labels:
+    environment: production
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: taskflow.com
+      http:
+        paths:
+          - path: /api/Users
+            pathType: Prefix
+            backend:
+              service:
+                name: usersapi-clusterip-svc
+                port:
+                  number: 8080
+          - path: /api/Tasks
+            pathType: Prefix
+            backend:
+              service:
+                name: tasksapi-clusterip-svc
+                port:
+                  number: 8080
