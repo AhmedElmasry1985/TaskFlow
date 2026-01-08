@@ -332,7 +332,7 @@ TaskFlow supports two deployment methods: **Kubernetes** (production-ready) and 
 
 4. **Test the API:**
    ```bash
-   curl http://localhost:8080/health
+   curl http://localhost:18080/health
    ```
 
 5. **View logs:**
@@ -359,8 +359,8 @@ TaskFlow supports two deployment methods: **Kubernetes** (production-ready) and 
 - ✅ No Kubernetes overhead
 
 **Service Ports (Docker Compose):**
-- UsersApi: `http://localhost:8080`
-- TasksApi: `http://localhost:9080`
+- UsersApi: `http://localhost:18080`
+- TasksApi: `http://localhost:28080`
 - RabbitMQ Management: `http://localhost:15672` (guest/guest)
 - SQL Server (UsersDb): `localhost:11433`
 - SQL Server (TasksDb): `localhost:21433`
@@ -387,7 +387,7 @@ TaskFlow supports two deployment methods: **Kubernetes** (production-ready) and 
 
 **Base URLs:**
 - Kubernetes: `http://taskflow.com`
-- Docker Compose: `http://localhost:8080` (UsersApi), `http://localhost:9080` (TasksApi)
+- Docker Compose: `http://localhost:18080` (UsersApi), `http://localhost:28080` (TasksApi)
 
 **Register User:**
 ```bash
@@ -397,7 +397,7 @@ curl -X POST http://taskflow.com/api/users/Register \
   -d '{"username":"john","password":"Pass@123","fullName":"John Doe"}'
 
 # Docker Compose
-curl -X POST http://localhost:8080/api/users/Register \
+curl -X POST http://localhost:18080/api/users/Register \
   -H "Content-Type: application/json" \
   -d '{"username":"john","password":"Pass@123","fullName":"John Doe"}'
 ```
@@ -410,7 +410,7 @@ curl -X POST http://taskflow.com/api/users/Login \
   -d '{"username":"john","password":"Pass@123"}'
 
 # Docker Compose
-curl -X POST http://localhost:8080/api/users/Login \
+curl -X POST http://localhost:18080/api/users/Login \
   -H "Content-Type: application/json" \
   -d '{"username":"john","password":"Pass@123"}'
 ```
@@ -424,7 +424,7 @@ curl -X POST http://taskflow.com/api/tasks/CreateTask \
   -d '{"title":"My Task","description":"Task description","assignedUserId":1}'
 
 # Docker Compose
-curl -X POST http://localhost:9080/api/tasks/CreateTask \
+curl -X POST http://localhost:28080/api/tasks/CreateTask \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{"title":"My Task","description":"Task description","assignedUserId":1}'
