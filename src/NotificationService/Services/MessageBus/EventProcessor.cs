@@ -9,7 +9,7 @@ public class EventProcessor:IEventProcessor
     private const string
         UnknownEventMsg = "Unknown event: '{0}'.",
         RegisteredUserEvent = "User '{0}' with username '{1}' registered.",
-        TaskCreatedEvent = "Task '{0}' created on behalf of '{1}' by '{2}'.",
+        TaskCreatedEvent = "Task '{0}' created by'{1}' and assigned to '{2}'.",
         NoteAddedEvent = "Note '{0}' added to task '{1}' by '{2}'.",
         TaskStatusChangedEvent = "Task '{0}' status changed from '{1}' to '{2}'.";
 
